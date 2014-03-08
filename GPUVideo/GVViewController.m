@@ -24,6 +24,7 @@
 @property (nonatomic, assign) int filterArrayPosition;
 @property (nonatomic, assign) int mediaControlButtonState;
 @property (nonatomic, strong) NSURL *fileURL;
+@property (strong, nonatomic) IBOutlet UILabel *filterNameLabel;
 
 @end
 
@@ -40,17 +41,19 @@
     GPUImageStretchDistortionFilter *stretchDistortionFilter = [[GPUImageStretchDistortionFilter alloc] init];
     GPUImageSwirlFilter *swirlFilter = [[GPUImageSwirlFilter alloc] init];
     GPUImagePinchDistortionFilter *pinchDistortionFilter = [[GPUImagePinchDistortionFilter alloc] init];
-    GPUImageMosaicFilter *mosaicFilter = [[GPUImageMosaicFilter alloc] init];
+    GPUImageSketchFilter *sketchFilter = [[GPUImageSketchFilter alloc] init];
     GPUImageLowPassFilter *lowPassFilter = [[GPUImageLowPassFilter alloc] init];
-    GPUImageGaussianBlurFilter *gaussianBlurFilter = [[GPUImageGaussianBlurFilter alloc] init];
-    self.filterArray = [NSArray arrayWithObjects:stretchDistortionFilter, swirlFilter, pinchDistortionFilter, mosaicFilter, lowPassFilter, gaussianBlurFilter, nil];
+    GPUImageEmbossFilter *embossFilter = [[GPUImageEmbossFilter alloc] init];
+    self.filterArray = [NSArray arrayWithObjects:stretchDistortionFilter, swirlFilter, pinchDistortionFilter, sketchFilter, lowPassFilter, embossFilter, nil];
     
     //hide save and delete buttons while nothing has been recorded
     [self.deleteVideoButton setHidden:YES];
     [self.saveVideoButton setHidden:YES];
     
+    self.filterNameLabel.alpha = 0;
+    
     //initialize array of filter names
-    self.filterNameArray = [NSArray arrayWithObjects:@"Stretch", @"Swirl", @"Pinch", @"Mosaic", @"Drunk", @"Blurry", nil];
+    self.filterNameArray = [NSArray arrayWithObjects:@"Stretch", @"Swirl", @"Pinch", @"Sketch", @"Drunk", @"Emboss", nil];
     
     self.filterArrayPosition = 0;
     self.mediaControlButtonState = 0;
@@ -87,7 +90,7 @@
     [self.filterArray[0] addTarget:self.filteredVideoView];
     [self.filterArray[0] addTarget:self.movieWriter];
     [self.filteredVideoView setClipsToBounds:YES];
-    [self.view addSubview:self.filteredVideoView];
+    [self.view insertSubview:self.filteredVideoView belowSubview:self.filterNameLabel];
     
     
     [videoCamera startCameraCapture];
@@ -109,6 +112,16 @@
         [self.filterArray[self.filterArrayPosition] addTarget:self.movieWriter]; //
         [self.filterArray[self.filterArrayPosition] prepareForImageCapture];
         [self.filteredVideoView setClipsToBounds:YES];
+        
+        self.filterNameLabel.text = self.filterNameArray[self.filterArrayPosition];
+        
+        [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionCurveEaseIn
+                         animations:^{ self.filterNameLabel.alpha = 1;}
+                         completion:^(BOOL finished) {
+                             [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionCurveEaseIn
+                                              animations:^{ self.filterNameLabel.alpha = 0;}
+                                              completion:nil];
+                         }];
     }
     
     if(sender.direction == UISwipeGestureRecognizerDirectionLeft) {
@@ -126,6 +139,16 @@
         [self.filterArray[self.filterArrayPosition] addTarget:self.movieWriter]; //
         [self.filterArray[self.filterArrayPosition] prepareForImageCapture];
         [self.filteredVideoView setClipsToBounds:YES];
+        
+        self.filterNameLabel.text = self.filterNameArray[self.filterArrayPosition];
+        
+        [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionCurveEaseIn
+                         animations:^{ self.filterNameLabel.alpha = 1;}
+                         completion:^(BOOL finished) {
+                             [UIView animateWithDuration:0.5 delay:0 options:UIViewAnimationOptionCurveEaseIn
+                                              animations:^{ self.filterNameLabel.alpha = 0;}
+                                              completion:nil];
+                         }];
     }
 }
 
@@ -145,12 +168,17 @@
     } else {
         [self.mediaControlButton setImage:[UIImage imageNamed:@"stop-100.png"] forState:UIControlStateNormal];
         
+        // Assemble the file URL [copied/pasted, can be made cleaner]
+        NSString *fileName = @"temp.mp4";
         NSError* error = nil;
+        self.fileURL = [[[[NSFileManager defaultManager] URLsForDirectory: NSDocumentDirectory inDomains:NSUserDomainMask] lastObject] URLByAppendingPathComponent:fileName];
         
         // Remove file from the path of the file URL, if one already exists there
         if([[NSFileManager defaultManager] fileExistsAtPath:self.fileURL.path]){
             [[NSFileManager defaultManager] removeItemAtURL:self.fileURL error:&error];
         }
+        
+        self.movieWriter = [[GPUImageMovieWriter alloc] initWithMovieURL:self.fileURL size:CGSizeMake(480.0, 640.0)];
 
         videoCamera.audioEncodingTarget = self.movieWriter;
         [self.movieWriter startRecording];

@@ -52,12 +52,20 @@
                                 <rect key="frame" x="0.0" y="65" width="320" height="410"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </imageView>
+                            <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Ykl-Tf-N1t">
+                                <rect key="frame" x="64" y="80" width="192" height="58"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="44"/>
+                                <nil key="highlightedColor"/>
+                                <color key="shadowColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="0.37150825737999305" green="0.79264618720751567" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                     </view>
                     <connections>
                         <outlet property="GPUImageView" destination="LzT-4q-Zg6" id="G11-MH-iVP"/>
                         <outlet property="deleteVideoButton" destination="TRB-h4-QmZ" id="EyP-DU-gDC"/>
+                        <outlet property="filterNameLabel" destination="Ykl-Tf-N1t" id="BUg-xx-6lr"/>
                         <outlet property="mediaControlButton" destination="CB1-LS-ffQ" id="emr-Rp-Fik"/>
                         <outlet property="saveVideoButton" destination="4Wg-oI-e1y" id="NVh-Ac-8gd"/>
                     </connections>
