@@ -68,14 +68,9 @@
     self.leftSwipe = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(changeFilter:)];
     self.leftSwipe.direction = UISwipeGestureRecognizerDirectionLeft ;
     [self.filteredVideoView addGestureRecognizer:self.leftSwipe];
-    
     self.rightSwipe = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(changeFilter:)];
     self.rightSwipe.direction = UISwipeGestureRecognizerDirectionRight ;
     [self.view addGestureRecognizer:self.rightSwipe];
-    
-    [self.filterArray[0] addTarget:self.filteredVideoView];
-    [self.filteredVideoView setClipsToBounds:YES];
-    [self.view addSubview:self.filteredVideoView];
     
     // Assemble the file URL [copied/pasted, can be made cleaner]
     NSString *fileName = @"temp.mp4";
@@ -88,6 +83,12 @@
     }
     
     self.movieWriter = [[GPUImageMovieWriter alloc] initWithMovieURL:self.fileURL size:CGSizeMake(480.0, 640.0)];
+    
+    [self.filterArray[0] addTarget:self.filteredVideoView];
+    [self.filterArray[0] addTarget:self.movieWriter];
+    [self.filteredVideoView setClipsToBounds:YES];
+    [self.view addSubview:self.filteredVideoView];
+    
     
     [videoCamera startCameraCapture];
 }
@@ -105,6 +106,7 @@
         
         [videoCamera addTarget:self.filterArray[self.filterArrayPosition]];
         [self.filterArray[self.filterArrayPosition] addTarget:self.filteredVideoView];
+        [self.filterArray[self.filterArrayPosition] addTarget:self.movieWriter]; //
         [self.filterArray[self.filterArrayPosition] prepareForImageCapture];
         [self.filteredVideoView setClipsToBounds:YES];
     }
@@ -121,6 +123,7 @@
         
         [videoCamera addTarget:self.filterArray[self.filterArrayPosition]];
         [self.filterArray[self.filterArrayPosition] addTarget:self.filteredVideoView];
+        [self.filterArray[self.filterArrayPosition] addTarget:self.movieWriter]; //
         [self.filterArray[self.filterArrayPosition] prepareForImageCapture];
         [self.filteredVideoView setClipsToBounds:YES];
     }
@@ -148,8 +151,6 @@
         if([[NSFileManager defaultManager] fileExistsAtPath:self.fileURL.path]){
             [[NSFileManager defaultManager] removeItemAtURL:self.fileURL error:&error];
         }
-        
-        [self.filterArray[self.filterArrayPosition] addTarget:self.movieWriter];
 
         videoCamera.audioEncodingTarget = self.movieWriter;
         [self.movieWriter startRecording];
