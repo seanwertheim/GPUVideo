@@ -13,8 +13,7 @@
 @property (strong, nonatomic) IBOutlet UIButton *deleteVideoButton;
 @property (strong, nonatomic) IBOutlet UIButton *mediaControlButton;
 @property (strong, nonatomic) IBOutlet UIButton *saveVideoButton;
-@property (strong, nonatomic) IBOutlet UIImageView *GPUImageView;
-@property (strong, nonatomic) GPUImageView *filteredVideoView;
+@property (strong, nonatomic) IBOutlet GPUImageView *GPUImageView;
 @property (strong, nonatomic) GPUImageFilter *filter;
 @property (strong, nonatomic) GPUImageMovieWriter *movieWriter;
 @property (strong, nonatomic) UISwipeGestureRecognizer *leftSwipe;
@@ -25,6 +24,10 @@
 @property (nonatomic, assign) int mediaControlButtonState;
 @property (nonatomic, strong) NSURL *fileURL;
 @property (strong, nonatomic) IBOutlet UILabel *filterNameLabel;
+@property (strong, nonatomic) AVAsset *avAsset;
+@property (strong, nonatomic) AVPlayer *avPlayer;
+@property (strong, nonatomic) AVPlayerLayer *avPlayerLayer;
+@property (strong, nonatomic) AVPlayerItem *avPlayerItem;
 
 @end
 
@@ -50,6 +53,7 @@
     [self.deleteVideoButton setHidden:YES];
     [self.saveVideoButton setHidden:YES];
     
+    //filter name label to fade in
     self.filterNameLabel.alpha = 0;
     
     //initialize array of filter names
@@ -58,19 +62,39 @@
     self.filterArrayPosition = 0;
     self.mediaControlButtonState = 0;
     
+    //get device specs
+    NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+    AVCaptureDevice *captureDevice;
+    for (AVCaptureDevice *device in devices) {
+        if ([device position] == AVCaptureDevicePositionBack) {//get the back facing camera
+            captureDevice = device;
+        }
+    }
+    
+    //detect which session preset and writer size we can use
+    NSString *sessionPreset;
+    CGSize writerSize;
+    if ([captureDevice supportsAVCaptureSessionPreset:AVCaptureSessionPreset1920x1080]) {
+        sessionPreset = AVCaptureSessionPreset1920x1080;
+        writerSize = CGSizeMake(1080, 1920);
+        NSLog(@"Set preview port to 1920x1080");
+    } else if ([captureDevice supportsAVCaptureSessionPreset:AVCaptureSessionPreset640x480]) {
+        NSLog(@"Set preview port to 640X480");
+        sessionPreset = AVCaptureSessionPreset640x480;
+        writerSize = CGSizeMake(480, 640);
+    }
+    
     //setup preview for filtered video
     videoCamera = [[GPUImageVideoCamera alloc]
-                   initWithSessionPreset:AVCaptureSessionPreset640x480
+                   initWithSessionPreset:sessionPreset
                    cameraPosition:AVCaptureDevicePositionBack];
     videoCamera.outputImageOrientation = UIInterfaceOrientationPortrait;
     [videoCamera addTarget:self.filterArray[0]];
     
-    self.filteredVideoView = [[GPUImageView alloc] initWithFrame:self.GPUImageView.frame];
-    
     //add gesture recognizers to filteredVideoView
     self.leftSwipe = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(changeFilter:)];
     self.leftSwipe.direction = UISwipeGestureRecognizerDirectionLeft ;
-    [self.filteredVideoView addGestureRecognizer:self.leftSwipe];
+    [self.GPUImageView addGestureRecognizer:self.leftSwipe];
     self.rightSwipe = [[UISwipeGestureRecognizer alloc]initWithTarget:self action:@selector(changeFilter:)];
     self.rightSwipe.direction = UISwipeGestureRecognizerDirectionRight ;
     [self.view addGestureRecognizer:self.rightSwipe];
@@ -85,12 +109,12 @@
         [[NSFileManager defaultManager] removeItemAtURL:self.fileURL error:&error];
     }
     
-    self.movieWriter = [[GPUImageMovieWriter alloc] initWithMovieURL:self.fileURL size:CGSizeMake(480.0, 640.0)];
+    self.movieWriter = [[GPUImageMovieWriter alloc] initWithMovieURL:self.fileURL size:writerSize];
     
-    [self.filterArray[0] addTarget:self.filteredVideoView];
+    [self.filterArray[0] addTarget:self.GPUImageView];
     [self.filterArray[0] addTarget:self.movieWriter];
-    [self.filteredVideoView setClipsToBounds:YES];
-    [self.view insertSubview:self.filteredVideoView belowSubview:self.filterNameLabel];
+    [self.GPUImageView setClipsToBounds:YES];
+    [self.view insertSubview:self.GPUImageView belowSubview:self.filterNameLabel];
     
     
     [videoCamera startCameraCapture];
@@ -108,10 +132,10 @@
         if (self.filterArrayPosition < 0) self.filterArrayPosition += 6;
         
         [videoCamera addTarget:self.filterArray[self.filterArrayPosition]];
-        [self.filterArray[self.filterArrayPosition] addTarget:self.filteredVideoView];
+        [self.filterArray[self.filterArrayPosition] addTarget:self.GPUImageView];
         [self.filterArray[self.filterArrayPosition] addTarget:self.movieWriter]; //
         [self.filterArray[self.filterArrayPosition] prepareForImageCapture];
-        [self.filteredVideoView setClipsToBounds:YES];
+        [self.GPUImageView setClipsToBounds:YES];
         
         self.filterNameLabel.text = self.filterNameArray[self.filterArrayPosition];
         
@@ -135,10 +159,10 @@
         if (self.filterArrayPosition < 0) self.filterArrayPosition += 6;
         
         [videoCamera addTarget:self.filterArray[self.filterArrayPosition]];
-        [self.filterArray[self.filterArrayPosition] addTarget:self.filteredVideoView];
+        [self.filterArray[self.filterArrayPosition] addTarget:self.GPUImageView];
         [self.filterArray[self.filterArrayPosition] addTarget:self.movieWriter]; //
         [self.filterArray[self.filterArrayPosition] prepareForImageCapture];
-        [self.filteredVideoView setClipsToBounds:YES];
+        [self.GPUImageView setClipsToBounds:YES];
         
         self.filterNameLabel.text = self.filterNameArray[self.filterArrayPosition];
         
@@ -156,17 +180,39 @@
     self.mediaControlButtonState = ++self.mediaControlButtonState % 2;
     
     if (self.mediaControlButtonState == 0) {
-        [self.mediaControlButton setImage:[UIImage imageNamed:@"Media-Controls-Record-icon.png"] forState:UIControlStateNormal];
+        [self.mediaControlButton setImage:[UIImage imageNamed:@"video_rec_64.png"] forState:UIControlStateNormal];
         
         [self.filterArray[self.filterArrayPosition] removeTarget:self.movieWriter];
         videoCamera.audioEncodingTarget = nil;
         [self.movieWriter finishRecording];
         NSLog(@"Movie completed");
         
+        //create AVPlayer to playback looping preview of video
+        self.avAsset = [AVAsset assetWithURL:self.fileURL];
+        self.avPlayerItem =[[AVPlayerItem alloc]initWithAsset:self.avAsset];
+        self.avPlayer = [[AVPlayer alloc]initWithPlayerItem:self.avPlayerItem];
+        self.avPlayerLayer =[AVPlayerLayer playerLayerWithPlayer:self.avPlayer];
+        [self.avPlayerLayer setFrame:self.GPUImageView.frame];
+        
+        [self.GPUImageView.layer insertSublayer:self.avPlayerLayer below:self.mediaControlButton.layer];
+
+        
+        
+        //[avPlayerLayer setBackgroundColor:[[UIColor redColor]CGColor]];
+        [self.avPlayer seekToTime:kCMTimeZero];
+        [self.avPlayer play];
+        
+        self.avPlayer.actionAtItemEnd = AVPlayerActionAtItemEndNone;
+        
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(playerItemDidReachEnd:)
+                                                     name:AVPlayerItemDidPlayToEndTimeNotification
+                                                   object:[self.avPlayer currentItem]];
+        
         [self.deleteVideoButton setHidden:NO];
         [self.saveVideoButton setHidden:NO];
     } else {
-        [self.mediaControlButton setImage:[UIImage imageNamed:@"stop-100.png"] forState:UIControlStateNormal];
+        [self.mediaControlButton setImage:[UIImage imageNamed:@"video_stop_64.png"] forState:UIControlStateNormal];
         
         // Assemble the file URL [copied/pasted, can be made cleaner]
         NSString *fileName = @"temp.mp4";
@@ -178,8 +224,6 @@
             [[NSFileManager defaultManager] removeItemAtURL:self.fileURL error:&error];
         }
         
-        self.movieWriter = [[GPUImageMovieWriter alloc] initWithMovieURL:self.fileURL size:CGSizeMake(480.0, 640.0)];
-
         videoCamera.audioEncodingTarget = self.movieWriter;
         [self.movieWriter startRecording];
         
@@ -187,6 +231,11 @@
         [self.deleteVideoButton setHidden:YES];
         [self.saveVideoButton setHidden:YES];
     }
+}
+
+- (void)playerItemDidReachEnd:(NSNotification *)notification {
+    AVPlayerItem *p = [notification object];
+    [p seekToTime:kCMTimeZero];
 }
 
 - (IBAction)deleteVideoButtonPressed:(id)sender {

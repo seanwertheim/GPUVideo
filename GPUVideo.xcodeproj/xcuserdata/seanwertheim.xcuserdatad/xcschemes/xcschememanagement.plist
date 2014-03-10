@@ -4,6 +4,11 @@
 <dict>
 	<key>SchemeUserState</key>
 	<dict>
+		<key>Documentation.xcscheme</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>3</integer>
+		</dict>
 		<key>GPUVideo.xcscheme</key>
 		<dict>
 			<key>orderHint</key>
@@ -18,6 +23,11 @@
 			<true/>
 		</dict>
 		<key>003025B818CA8EC000835D8B</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>0080F2D618CD204800D4745B</key>
 		<dict>
 			<key>primary</key>
 			<true/>

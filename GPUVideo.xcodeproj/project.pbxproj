@@ -32,6 +32,11 @@
 		005C42F618CA923500AB9883 /* play-100.png in Resources */ = {isa = PBXBuildFile; fileRef = 005C42F118CA923500AB9883 /* play-100.png */; };
 		005C42F718CA923500AB9883 /* save_as-100.png in Resources */ = {isa = PBXBuildFile; fileRef = 005C42F218CA923500AB9883 /* save_as-100.png */; };
 		005C42F818CA923500AB9883 /* stop-100.png in Resources */ = {isa = PBXBuildFile; fileRef = 005C42F318CA923500AB9883 /* stop-100.png */; };
+		00C4DB2318CE50FF00930BB7 /* delete_24.png in Resources */ = {isa = PBXBuildFile; fileRef = 00C4DB2218CE50FF00930BB7 /* delete_24.png */; };
+		00C53B4818CD1A1000AC461A /* delete_48.png in Resources */ = {isa = PBXBuildFile; fileRef = 00C53B4418CD1A1000AC461A /* delete_48.png */; };
+		00C53B4918CD1A1000AC461A /* save_64.png in Resources */ = {isa = PBXBuildFile; fileRef = 00C53B4518CD1A1000AC461A /* save_64.png */; };
+		00C53B4A18CD1A1000AC461A /* video_rec_64.png in Resources */ = {isa = PBXBuildFile; fileRef = 00C53B4618CD1A1000AC461A /* video_rec_64.png */; };
+		00C53B4B18CD1A1000AC461A /* video_stop_64.png in Resources */ = {isa = PBXBuildFile; fileRef = 00C53B4718CD1A1000AC461A /* video_stop_64.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -96,6 +101,11 @@
 		005C42F118CA923500AB9883 /* play-100.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "play-100.png"; sourceTree = "<group>"; };
 		005C42F218CA923500AB9883 /* save_as-100.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "save_as-100.png"; sourceTree = "<group>"; };
 		005C42F318CA923500AB9883 /* stop-100.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "stop-100.png"; sourceTree = "<group>"; };
+		00C4DB2218CE50FF00930BB7 /* delete_24.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = delete_24.png; sourceTree = "<group>"; };
+		00C53B4418CD1A1000AC461A /* delete_48.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = delete_48.png; sourceTree = "<group>"; };
+		00C53B4518CD1A1000AC461A /* save_64.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = save_64.png; sourceTree = "<group>"; };
+		00C53B4618CD1A1000AC461A /* video_rec_64.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = video_rec_64.png; sourceTree = "<group>"; };
+		00C53B4718CD1A1000AC461A /* video_stop_64.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = video_stop_64.png; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -170,6 +180,7 @@
 				003025AA18CA8EBF00835D8B /* GVAppDelegate.h */,
 				003025AB18CA8EBF00835D8B /* GVAppDelegate.m */,
 				005C42EC18CA920700AB9883 /* Main1.storyboard */,
+				00C53B4318CD1A1000AC461A /* New CC Icons */,
 				005C42EE18CA923500AB9883 /* Assignment3Icons */,
 				003025B018CA8EBF00835D8B /* GVViewController.h */,
 				003025B118CA8EC000835D8B /* GVViewController.m */,
@@ -230,6 +241,18 @@
 			path = "../../../../Downloads/RosieApp 2/RosieApp/Assignment3Icons";
 			sourceTree = "<group>";
 		};
+		00C53B4318CD1A1000AC461A /* New CC Icons */ = {
+			isa = PBXGroup;
+			children = (
+				00C4DB2218CE50FF00930BB7 /* delete_24.png */,
+				00C53B4418CD1A1000AC461A /* delete_48.png */,
+				00C53B4518CD1A1000AC461A /* save_64.png */,
+				00C53B4618CD1A1000AC461A /* video_rec_64.png */,
+				00C53B4718CD1A1000AC461A /* video_stop_64.png */,
+			);
+			path = "New CC Icons";
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -240,6 +263,7 @@
 				0030259418CA8EBF00835D8B /* Sources */,
 				0030259518CA8EBF00835D8B /* Frameworks */,
 				0030259618CA8EBF00835D8B /* Resources */,
+				0080F2D318CD1E9600D4745B /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -332,12 +356,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				005C42F518CA923500AB9883 /* Media-Controls-Record-icon.png in Resources */,
+				00C53B4B18CD1A1000AC461A /* video_stop_64.png in Resources */,
 				003025B418CA8EC000835D8B /* Images.xcassets in Resources */,
 				005C42F718CA923500AB9883 /* save_as-100.png in Resources */,
 				003025A618CA8EBF00835D8B /* InfoPlist.strings in Resources */,
 				005C42F618CA923500AB9883 /* play-100.png in Resources */,
 				005C42F818CA923500AB9883 /* stop-100.png in Resources */,
 				005C42ED18CA920700AB9883 /* Main1.storyboard in Resources */,
+				00C53B4818CD1A1000AC461A /* delete_48.png in Resources */,
+				00C53B4A18CD1A1000AC461A /* video_rec_64.png in Resources */,
+				00C4DB2318CE50FF00930BB7 /* delete_24.png in Resources */,
+				00C53B4918CD1A1000AC461A /* save_64.png in Resources */,
 				005C42F418CA923500AB9883 /* delete_sign-100.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -351,6 +380,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		0080F2D318CD1E9600D4745B /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0030259418CA8EBF00835D8B /* Sources */ = {
