@@ -24,10 +24,11 @@
 @property (nonatomic, assign) int mediaControlButtonState;
 @property (nonatomic, strong) NSURL *fileURL;
 @property (strong, nonatomic) IBOutlet UILabel *filterNameLabel;
-@property (strong, nonatomic) AVAsset *avAsset;
+@property (strong, nonatomic) AVURLAsset *avAsset;
 @property (strong, nonatomic) AVPlayer *avPlayer;
 @property (strong, nonatomic) AVPlayerLayer *avPlayerLayer;
 @property (strong, nonatomic) AVPlayerItem *avPlayerItem;
+@property (assign, nonatomic) CGSize writerSize;
 
 @end
 
@@ -73,15 +74,14 @@
     
     //detect which session preset and writer size we can use
     NSString *sessionPreset;
-    CGSize writerSize;
     if ([captureDevice supportsAVCaptureSessionPreset:AVCaptureSessionPreset1920x1080]) {
         sessionPreset = AVCaptureSessionPreset1920x1080;
-        writerSize = CGSizeMake(1080, 1920);
+        self.writerSize = CGSizeMake(1080, 1920);
         NSLog(@"Set preview port to 1920x1080");
     } else if ([captureDevice supportsAVCaptureSessionPreset:AVCaptureSessionPreset640x480]) {
         NSLog(@"Set preview port to 640X480");
         sessionPreset = AVCaptureSessionPreset640x480;
-        writerSize = CGSizeMake(480, 640);
+        self.writerSize = CGSizeMake(480, 640);
     }
     
     //setup preview for filtered video
@@ -109,10 +109,10 @@
         [[NSFileManager defaultManager] removeItemAtURL:self.fileURL error:&error];
     }
     
-    self.movieWriter = [[GPUImageMovieWriter alloc] initWithMovieURL:self.fileURL size:writerSize];
+    self.movieWriter = [[GPUImageMovieWriter alloc] initWithMovieURL:self.fileURL size:self.writerSize];
     
-    [self.filterArray[0] addTarget:self.GPUImageView];
-    [self.filterArray[0] addTarget:self.movieWriter];
+    [self.filterArray[self.filterArrayPosition] addTarget:self.GPUImageView];
+    [self.filterArray[self.filterArrayPosition] addTarget:self.movieWriter];
     [self.GPUImageView setClipsToBounds:YES];
     [self.view insertSubview:self.GPUImageView belowSubview:self.filterNameLabel];
     
@@ -180,6 +180,7 @@
     self.mediaControlButtonState = ++self.mediaControlButtonState % 2;
     
     if (self.mediaControlButtonState == 0) {
+        ////// You are previewing here
         [self.mediaControlButton setImage:[UIImage imageNamed:@"video_rec_64.png"] forState:UIControlStateNormal];
         
         [self.filterArray[self.filterArrayPosition] removeTarget:self.movieWriter];
@@ -188,19 +189,20 @@
         NSLog(@"Movie completed");
         
         //create AVPlayer to playback looping preview of video
-        self.avAsset = [AVAsset assetWithURL:self.fileURL];
-        self.avPlayerItem =[[AVPlayerItem alloc]initWithAsset:self.avAsset];
+        self.avAsset = [[AVURLAsset alloc] initWithURL:self.fileURL options:nil];
+        if ([self.avAsset isPlayable]) {
+            self.avPlayerItem =[[AVPlayerItem alloc]initWithAsset:self.avAsset];
+        }
         self.avPlayer = [[AVPlayer alloc]initWithPlayerItem:self.avPlayerItem];
+        
+        
+//        [self.avPlayerItem addObserver:self forKeyPath:@"status" options:0 context:nil];
+//        [self.avPlayer addObserver:self forKeyPath:@"status" options:0 context:NULL];
         self.avPlayerLayer =[AVPlayerLayer playerLayerWithPlayer:self.avPlayer];
         [self.avPlayerLayer setFrame:self.GPUImageView.frame];
         
+        
         [self.GPUImageView.layer insertSublayer:self.avPlayerLayer below:self.mediaControlButton.layer];
-
-        
-        
-        //[avPlayerLayer setBackgroundColor:[[UIColor redColor]CGColor]];
-        [self.avPlayer seekToTime:kCMTimeZero];
-        [self.avPlayer play];
         
         self.avPlayer.actionAtItemEnd = AVPlayerActionAtItemEndNone;
         
@@ -209,20 +211,23 @@
                                                      name:AVPlayerItemDidPlayToEndTimeNotification
                                                    object:[self.avPlayer currentItem]];
         
+        [self.avPlayer play];
+        
         [self.deleteVideoButton setHidden:NO];
         [self.saveVideoButton setHidden:NO];
     } else {
+        ///// You are recording here
         [self.mediaControlButton setImage:[UIImage imageNamed:@"video_stop_64.png"] forState:UIControlStateNormal];
         
-        // Assemble the file URL [copied/pasted, can be made cleaner]
-        NSString *fileName = @"temp.mp4";
-        NSError* error = nil;
-        self.fileURL = [[[[NSFileManager defaultManager] URLsForDirectory: NSDocumentDirectory inDomains:NSUserDomainMask] lastObject] URLByAppendingPathComponent:fileName];
+        
         
         // Remove file from the path of the file URL, if one already exists there
         if([[NSFileManager defaultManager] fileExistsAtPath:self.fileURL.path]){
-            [[NSFileManager defaultManager] removeItemAtURL:self.fileURL error:&error];
+            [[NSFileManager defaultManager] removeItemAtURL:self.fileURL error:nil];
         }
+        
+        self.movieWriter = [[GPUImageMovieWriter alloc] initWithMovieURL:self.fileURL size:self.writerSize];
+        [self.filterArray[self.filterArrayPosition] addTarget:self.movieWriter];
         
         videoCamera.audioEncodingTarget = self.movieWriter;
         [self.movieWriter startRecording];
@@ -246,6 +251,14 @@
         [[NSFileManager defaultManager] removeItemAtURL:self.fileURL error:&error];
     }
     
+    //stop observing avplayer
+//    [self.avPlayer removeObserver:self forKeyPath:@"status"];
+    
+    //hide avplayer layer
+    [self.avPlayerLayer removeFromSuperlayer];
+    [self.avPlayer pause];
+    self.avPlayer = nil;
+    
     [self.deleteVideoButton setHidden:YES];
     [self.saveVideoButton setHidden:YES];
 }
@@ -254,6 +267,14 @@
     NSString *filePath = [self.fileURL path];
     
     UISaveVideoAtPathToSavedPhotosAlbum(filePath, self, @selector(video:didFinishSavingWithError:contextInfo:), nil);
+    
+    //stop observing avplayer
+//    [self.avPlayer removeObserver:self forKeyPath:@"status"];
+    
+    //hide avplayer layer
+    [self.avPlayerLayer removeFromSuperlayer];
+    [self.avPlayer pause];
+    self.avPlayer = nil;
     
     [self.deleteVideoButton setHidden:YES];
     [self.saveVideoButton setHidden:YES];
@@ -264,6 +285,26 @@
                  contextInfo: (void *) contextInfo{
     NSLog(@"the video was saved");
 }
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    if ([keyPath isEqualToString:@"status"] && [object class] == [AVPlayer class]) {
+        if (self.avPlayer.status == AVPlayerStatusReadyToPlay) {
+            [self.avPlayer play];
+        } else {
+            NSLog(@"AVPlayer is not ready to play.");
+        }
+    }
+    
+    if (false && [keyPath isEqualToString:@"status"] && [object class] == [AVPlayerItem class]) {
+        AVPlayerItem *item = (AVPlayerItem *)object;
+        if (item.status == AVPlayerItemStatusReadyToPlay) {
+            self.avPlayer = [[AVPlayer alloc]initWithPlayerItem:self.avPlayerItem];
+        } else {
+            NSLog(@"avplayeritem not ready");
+        }
+    }
+}
+
 
 
 - (void)didReceiveMemoryWarning
