@@ -182,6 +182,8 @@
     if (self.mediaControlButtonState == 0) {
         ////// You are previewing here
         [self.mediaControlButton setImage:[UIImage imageNamed:@"video_rec_64.png"] forState:UIControlStateNormal];
+        [self.mediaControlButton setHidden:YES];
+        [self.filterNameLabel setHidden:YES];
         
         [self.filterArray[self.filterArrayPosition] removeTarget:self.movieWriter];
         videoCamera.audioEncodingTarget = nil;
@@ -196,8 +198,6 @@
         self.avPlayer = [[AVPlayer alloc]initWithPlayerItem:self.avPlayerItem];
         
         
-//        [self.avPlayerItem addObserver:self forKeyPath:@"status" options:0 context:nil];
-//        [self.avPlayer addObserver:self forKeyPath:@"status" options:0 context:NULL];
         self.avPlayerLayer =[AVPlayerLayer playerLayerWithPlayer:self.avPlayer];
         [self.avPlayerLayer setFrame:self.GPUImageView.frame];
         
@@ -211,14 +211,22 @@
                                                      name:AVPlayerItemDidPlayToEndTimeNotification
                                                    object:[self.avPlayer currentItem]];
         
-        [self.avPlayer play];
+        //add activity indicator to show preview is loading then remove after 2 seconds
+        UIActivityIndicatorView *activityView=[[UIActivityIndicatorView alloc]     initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+        activityView.center=self.view.center;
+        [activityView startAnimating];
+        [self.view addSubview:activityView];
+        [activityView performSelector:@selector(removeFromSuperview) withObject:nil afterDelay:2.0];
+        
+        //allow preview to buffer for two seconds before playing
+        [self.avPlayer performSelector:@selector(play) withObject:nil afterDelay:2];
         
         [self.deleteVideoButton setHidden:NO];
         [self.saveVideoButton setHidden:NO];
     } else {
         ///// You are recording here
         [self.mediaControlButton setImage:[UIImage imageNamed:@"video_stop_64.png"] forState:UIControlStateNormal];
-        
+        [self.filterNameLabel setHidden:NO];
         
         
         // Remove file from the path of the file URL, if one already exists there
@@ -251,16 +259,17 @@
         [[NSFileManager defaultManager] removeItemAtURL:self.fileURL error:&error];
     }
     
-    //stop observing avplayer
-//    [self.avPlayer removeObserver:self forKeyPath:@"status"];
-    
     //hide avplayer layer
     [self.avPlayerLayer removeFromSuperlayer];
     [self.avPlayer pause];
     self.avPlayer = nil;
+    self.avAsset = nil;
+    self.avPlayerItem = nil;
     
     [self.deleteVideoButton setHidden:YES];
     [self.saveVideoButton setHidden:YES];
+    [self.mediaControlButton setHidden:NO];
+    [self.filterNameLabel setHidden:NO];
 }
 
 - (IBAction)saveVideoButtonPressed:(id)sender {
@@ -268,16 +277,17 @@
     
     UISaveVideoAtPathToSavedPhotosAlbum(filePath, self, @selector(video:didFinishSavingWithError:contextInfo:), nil);
     
-    //stop observing avplayer
-//    [self.avPlayer removeObserver:self forKeyPath:@"status"];
-    
     //hide avplayer layer
     [self.avPlayerLayer removeFromSuperlayer];
     [self.avPlayer pause];
     self.avPlayer = nil;
+    self.avAsset = nil;
+    self.avPlayerItem = nil;
     
     [self.deleteVideoButton setHidden:YES];
     [self.saveVideoButton setHidden:YES];
+    [self.mediaControlButton setHidden:NO];
+    [self.filterNameLabel setHidden:NO];
 }
 
 - (void)               video: (NSString *) videoPath
@@ -311,6 +321,8 @@
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+    
+    NSLog(@"Memory warning received.");
 }
 
 @end
